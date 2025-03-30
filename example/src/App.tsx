@@ -2,8 +2,7 @@ import { useRef } from 'react';
 import { View, StyleSheet, Text, Button } from 'react-native';
 import { IswPaymentWebView } from 'react-native-interswitch-pay';
 
-// Note: For typescript  support
-type TIswPaymentWebViewRef = React.ElementRef<typeof IswPaymentWebView>;
+type TIswPaymentWebViewRef = React.ComponentRef<typeof IswPaymentWebView>;
 
 export default function App() {
   const IswPaymentWebViewRef = useRef<TIswPaymentWebViewRef>(null);
@@ -29,18 +28,18 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {/* <IswPaymentWebView  /> */}
       <Text>Interswitch Payment</Text>
       <IswPaymentWebView
+        autoStart={false}
+        ref={IswPaymentWebViewRef}
         amount={payParams.amount}
+        payItem={payParams.payItem}
+        onCompleted={handleCallback}
         currency={payParams.currency}
         mode={payParams.mode as any}
-        autoStart={true}
         customer={payParams.customer}
-        payItem={payParams.payItem}
-        trnxRef={payParams.transactionRef}
+        transactionReference={payParams.transactionRef}
         merchantCode={payParams.merchantCode}
-        onCompleted={handleCallback}
         redirectUrl={payParams.redirectUrl}
         checkoutUrl={payParams.checkoutUrl}
       />
@@ -48,6 +47,12 @@ export default function App() {
         title="Start"
         onPress={() => {
           IswPaymentWebViewRef.current?.start();
+        }}
+      />
+      <Button
+        title="Stop"
+        onPress={() => {
+          IswPaymentWebViewRef.current?.end();
         }}
       />
     </View>
@@ -59,5 +64,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 40,
   },
 });
