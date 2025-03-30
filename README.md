@@ -4,17 +4,14 @@
 
 The Interswitch React Native SDK simplifies the integration of the Interswitch Payment Gateway (IPG) into your React Native app using a WebView component.
 
-
 [demo](https://www.loom.com/share/a368f65a0b2641b69e4fce1d74fcbbd8)
 
+## Features
 
-## Features  
-
-- Flexible implementation following the [official documentation](https://docs.interswitchgroup.com/docs/web-checkout).  
-- Integrated with the [Interswitch Web Redirect](https://docs.interswitchgroup.com/docs/web-checkout#option-2---web-redirect).  
-- Built with TypeScript for type safety and an enhanced developer experience.  
+- Flexible implementation following the [official documentation](https://docs.interswitchgroup.com/docs/web-checkout).
+- Integrated with the [Interswitch Web Redirect](https://docs.interswitchgroup.com/docs/web-checkout#option-2---web-redirect).
+- Built with TypeScript for type safety and an enhanced developer experience.
 - Supports both Expo and React Native CLI.
-
 
 ## Installation
 
@@ -36,39 +33,35 @@ yarn  react-native-interswitch-pay
 expo  install react-native-interswitch-pay
 ```
 
-
 > **_Important_**: This package depends on `react-native-webview` as a peer dependency and requires it for proper functionality.
 
 ## Quick Examples.
 
-
 #### Auto start Payment
 
 ```js
-
 import { View } from 'react-native';
-import IswPaymentWebView from 'react-native-interswitch-pay';
+import { IswPaymentWebView } from 'react-native-interswitch-pay';
 
 export const PaymentScreen = () => {
-
   const handleCallback = () => {
-    console.log('Handle callback here')
+    console.log('Handle callback here');
   };
 
   return (
     <View style={styles.container}>
-        <IswPaymentWebView
-          amount={amount}
-          currency={566}
-          mode={'TEST'}
-          autoStart={true}
-          payItem={{id: '9405967'}}
-          merchantCode={'MX6072'}
-          onCompleted={handleCallback}
-          transactionReference={'12344grtr'}
-          redirectUrl="https://example.com/payment-response"
-          checkoutUrl={'https://newwebpay.qa.interswitchng.com/collections/w/pay'}
-        />
+      <IswPaymentWebView
+        amount={amount}
+        currency={566}
+        mode={'TEST'}
+        autoStart={true}
+        payItem={{ id: '9405967' }}
+        merchantCode={'MX6072'}
+        onCompleted={handleCallback}
+        transactionReference={'12344grtr'}
+        redirectUrl="https://example.com/payment-response"
+        checkoutUrl={'https://newwebpay.qa.interswitchng.com/collections/w/pay'}
+      />
     </View>
   );
 };
@@ -80,8 +73,6 @@ const styles = StyleSheet.create({
     paddingTop: '10%',
   },
 });
-
-
 ```
 
 #### Use with Ref to trigger using a button
@@ -89,7 +80,7 @@ const styles = StyleSheet.create({
 ```js
 import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import IswPaymentWebView from 'react-native-interswitch-pay';
+import { IswPaymentWebView } from 'react-native-interswitch-pay';
 
 
 // Note: For typescript  support
@@ -139,21 +130,21 @@ const styles = StyleSheet.create({
 
 ### Props
 
-| Props Name           | Description                                                                                                                          | Required | Value                                   | Data type     |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------- | --------------------------------------- | -------- |
-| transactionReference      | transaction reference.          | Yes      |                                         | string   |
-| merchantCode       |  ISW merchant code                                                             | Yes       |   | string   |
-| amount        | Cost of the item you want your customer to pay  | Yes       |                                         | number   |
-| customer         | Customer information e.g email, first name, last name      | No       |                                         | object   |
-| payItem       | Payment Item e.g id and name              | Yes      | | object[]  |
-| autoStart      | To auto initialize transaction                                                                                                       | No       | false                                   | boolean  |
-| indicatorColor | activity indicator color                                                                                                            | No       | red                                | string   |
-| redirectUrl     | Merchant's website redirect url.                                                      | Yes       |                                         | string   |
-| currency       | ISO currency code e.g 566                         | Yes      | e.g 566                                     | number   |
-| mode  | Environment e.g LIVE, TEST                                  | Yes       |       TEST                                  | string   |
-| onCompleted      | Callback that triggers when webview close or cancels                                                                                 | Yes      |                                         | Function |
-| splitAccounts       | ISW Split accounts for settlements                                                                              | No      |      `SplitAccounts[]`                                   | Array |
-| onWebMessage   | Callback to handle web view message event                                                                                            | no       |                                         | Function |
+| Props Name           | Description                                           | Required | Value             | Data type |
+| -------------------- | ----------------------------------------------------- | -------- | ----------------- | --------- |
+| transactionReference | transaction reference.                                | Yes      |                   | string    |
+| merchantCode         | ISW merchant code                                     | Yes      |                   | string    |
+| amount               | Cost of the item you want your customer to pay        | Yes      |                   | number    |
+| customer             | Customer information e.g email, first name, last name | No       |                   | object    |
+| payItem              | Payment Item e.g id and name                          | Yes      |                   | object[]  |
+| autoStart            | To auto initialize transaction                        | No       | false             | boolean   |
+| indicatorColor       | activity indicator color                              | No       | red               | string    |
+| redirectUrl          | Merchant's website redirect url.                      | Yes      |                   | string    |
+| currency             | ISO currency code e.g 566                             | Yes      | e.g 566           | number    |
+| mode                 | Environment e.g LIVE, TEST                            | Yes      | TEST              | string    |
+| onCompleted          | Callback that triggers when webview close or cancels  | Yes      |                   | Function  |
+| splitAccounts        | ISW Split accounts for settlements                    | No       | `SplitAccounts[]` | Array     |
+| onWebMessage         | Callback to handle web view message event             | no       |                   | Function  |
 
 ## Contributing
 
