@@ -22,12 +22,11 @@ export const BackDrop: React.FunctionComponent<BackDropProps> = ({
     <Modal
       animationType="slide"
       transparent={true}
-      accessibilityHint="activity-indicator"
       visible={isLoading}
       {...otherModalProps}
     >
-      <View testID="centered-view" style={styles.centeredView}>
-        <ActivityIndicator testID="activity-indicator" color={color} />
+      <View style={styles.centeredView}>
+        <ActivityIndicator color={color} />
       </View>
     </Modal>
   );

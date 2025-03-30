@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet } from 'react-native';
 import {
   WebView,
   type WebViewNavigation,
@@ -14,6 +13,7 @@ import {
 import type { IswPaymentWebViewProps, IswWebViewRefMethods } from './types';
 import { getHtmlInputsFields, getWebCheckoutHtmlContent } from './utils';
 import { BackDrop } from './Backdrop';
+import { StyleSheet } from 'react-native';
 
 const DefaultRedirectUrl = 'https://newwebpay.interswitchng.com/';
 
@@ -22,21 +22,20 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
   IswPaymentWebViewProps
 > = (
   {
-    trnxRef,
     mode,
     onCompleted,
     payItem,
     accessToken,
     merchantCode,
-    tokeniseCard,
     amount,
-    currency = 566,
     customer,
     autoStart,
-    indcatorColor,
     onWebMessage,
     checkoutUrl,
+    tokenizeCard,
     splitAccounts,
+    currency = 566,
+    transactionReference,
     redirectUrl = DefaultRedirectUrl,
   },
   ref
@@ -53,8 +52,6 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
 
   useImperativeHandle(ref, () => ({
     start() {
-      console.log('===START CLICK====');
-      
       setOpenModal(true);
     },
     end() {
@@ -63,22 +60,18 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
   }));
 
   const inputs = getHtmlInputsFields({
-    amount,
-    currency,
     mode,
     payItem,
+    amount,
+    currency,
     accessToken,
     customer,
     merchantCode,
-    tokeniseCard,
-    trnxRef,
+    tokenizeCard,
     redirectUrl,
     splitAccounts,
+    transactionReference,
   });
-
-
-  console.log('IswPaymentWebViewRef', inputs, checkoutUrl);
-  
 
   const htmlContent = getWebCheckoutHtmlContent(checkoutUrl, inputs);
 
@@ -113,7 +106,7 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
           onNavigationStateChange={handleNavigationStateChange}
         />
       ) : null}
-      <BackDrop color={indcatorColor} isLoading={isLoading} />
+      <BackDrop isLoading={isLoading} />
     </>
   );
 };

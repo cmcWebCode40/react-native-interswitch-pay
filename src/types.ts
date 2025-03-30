@@ -28,9 +28,9 @@ export interface IswPaymentWebViewProps {
    */
   customer?: IswCustomer;
   /**
-   * Flag to indicate whether you want the customer's card to be tokenised, a tokenised value would be returned when you requery to confrim the transaction status
+   * Flag to indicate whether you want the customer's card to be tokenized, a tokenized value would be returned when you requery to confrim the transaction status
    */
-  tokeniseCard?: 'true' | 'false';
+  tokenizeCard?: 'true' | 'false';
   /**
    * Payment Item
    */
@@ -44,7 +44,7 @@ export interface IswPaymentWebViewProps {
   /**
    * transaction reference
    */
-  trnxRef?: string;
+  transactionReference?: string;
 
   /**
    * ISW merchant code
@@ -87,7 +87,7 @@ export interface IswPaymentWebViewProps {
   /**
    * Indicator Color
    */
-  indcatorColor?: ColorValue;
+  indicatorColor?: ColorValue;
 
   /**
    * ISW webchkout url
@@ -97,14 +97,14 @@ export interface IswPaymentWebViewProps {
   /**
    * ISW Split accounts for settlements
    */
-  splitAccounts?: SplitAccounts;
+  splitAccounts?: SplitAccounts[];
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
 
 export type SplitAccounts = {
-  alias: string,
-  amount: number,
-  description: string,
-  isPrimary: boolean,
-}
+  alias: string;
+  amount: number;
+  description: string;
+  isPrimary: boolean;
+};
