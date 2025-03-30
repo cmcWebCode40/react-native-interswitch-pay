@@ -2,18 +2,18 @@ import type { GetHtmlInputsFields } from './types';
 
 export const getHtmlInputsFields = ({
   customer,
-  trnxRef,
   merchantCode,
   currency,
   mode,
   accessToken,
-  tokeniseCard,
   amount,
   payItem,
   redirectUrl,
-  splitAccounts
+  splitAccounts,
+  tokenizeCard,
+  transactionReference,
 }: GetHtmlInputsFields) => {
-  const iswTxReference = `<input name="txn_ref" value=${trnxRef} />`;
+  const iswTxReference = `<input name="txn_ref" value=${transactionReference} />`;
   const siteRedirectUrl = `<input name="site_redirect_url" value=${redirectUrl} />`;
   const customerName = customer?.name
     ? `<input name="cust_name" value=${customer?.name} />`
@@ -39,11 +39,11 @@ export const getHtmlInputsFields = ({
   const iswAccessCode = accessToken
     ? `<input name="access_token" value=${accessToken} />`
     : '';
-  const iswTokeniseCard = tokeniseCard
-    ? `${tokeniseCard}<input name="tokenise_card" value=${tokeniseCard} />`
+  const iswTokenizeCard = tokenizeCard
+    ? `<input name="tokenise_card" value=${tokenizeCard} />`
     : '';
   const iswSplitAccounts = splitAccounts
-    ? `${tokeniseCard}<input name="split_accounts" value=${tokeniseCard} />`
+    ? `<input name="split_accounts" value=${JSON.stringify(splitAccounts)} />`
     : '';
   const htmlInputs = [
     iswTxReference,
@@ -59,7 +59,7 @@ export const getHtmlInputsFields = ({
     siteRedirectUrl,
     iswAccessCode,
     iswSplitAccounts,
-    iswTokeniseCard,
+    iswTokenizeCard,
   ].join('');
 
   return htmlInputs;
@@ -67,7 +67,7 @@ export const getHtmlInputsFields = ({
 
 export const getWebCheckoutHtmlContent = (
   checkoutUrl: string,
-  inputs: string,
+  inputs: string
 ) => {
   return `
   <!DOCTYPE html>
