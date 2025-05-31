@@ -1,4 +1,4 @@
-import type { ColorValue } from 'react-native';
+import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
 
 export type IswCustomer = {
   id?: string;
@@ -28,9 +28,9 @@ export interface IswPaymentWebViewProps {
    */
   customer?: IswCustomer;
   /**
-   * Flag to indicate whether you want the customer's card to be tokenized, a tokenized value would be returned when you requery to confrim the transaction status
+   * Flag to indicate whether you want the customer's card to be tokenised, a tokenised value would be returned when you requery to confrim the transaction status
    */
-  tokenizeCard?: 'true' | 'false';
+  tokeniseCard?: 'true' | 'false';
   /**
    * Payment Item
    */
@@ -74,7 +74,7 @@ export interface IswPaymentWebViewProps {
   /**
    * Access token value gotten from passport
    */
-  accessToken?: 'true' | 'false';
+  accessToken?: 'true' | 'fals';
 
   /**
    * ISO currency code
@@ -87,7 +87,7 @@ export interface IswPaymentWebViewProps {
   /**
    * Indicator Color
    */
-  indicatorColor?: ColorValue;
+  indcatorColor?: ColorValue;
 
   /**
    * ISW webchkout url
@@ -98,13 +98,28 @@ export interface IswPaymentWebViewProps {
    * ISW Split accounts for settlements
    */
   splitAccounts?: SplitAccounts[];
+  /**
+   * Custom back button
+   */
+  backButton?: React.ReactNode;
+
+  /**
+   * Custom WebView component  stylem
+   */
+  style?: StyleProp<ViewStyle>;
+
+  /**
+   * Show backdrop
+   */
+  showBackdrop?: boolean;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
 
 export type SplitAccounts = {
   alias: string;
-  amount: number;
+  amount?: number;
   description: string;
-  isPrimary: boolean;
+  percentage?: string;
+  isPrimary?: boolean | string;
 };

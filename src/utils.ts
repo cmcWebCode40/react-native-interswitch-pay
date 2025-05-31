@@ -2,16 +2,16 @@ import type { GetHtmlInputsFields } from './types';
 
 export const getHtmlInputsFields = ({
   customer,
+  transactionReference,
   merchantCode,
   currency,
   mode,
   accessToken,
+  tokeniseCard,
   amount,
   payItem,
   redirectUrl,
   splitAccounts,
-  tokenizeCard,
-  transactionReference,
 }: GetHtmlInputsFields) => {
   const iswTxReference = `<input name="txn_ref" value=${transactionReference} />`;
   const siteRedirectUrl = `<input name="site_redirect_url" value=${redirectUrl} />`;
@@ -39,12 +39,14 @@ export const getHtmlInputsFields = ({
   const iswAccessCode = accessToken
     ? `<input name="access_token" value=${accessToken} />`
     : '';
-  const iswTokenizeCard = tokenizeCard
-    ? `<input name="tokenise_card" value=${tokenizeCard} />`
+  const iswTokeniseCard = tokeniseCard
+    ? `<input name="tokenise_card" value=${tokeniseCard} />`
     : '';
+
   const iswSplitAccounts = splitAccounts
-    ? `<input name="split_accounts" value=${JSON.stringify(splitAccounts)} />`
+    ? `<input name="split_accounts" value='${JSON.stringify(splitAccounts)}' />`
     : '';
+
   const htmlInputs = [
     iswTxReference,
     customerName,
@@ -59,7 +61,7 @@ export const getHtmlInputsFields = ({
     siteRedirectUrl,
     iswAccessCode,
     iswSplitAccounts,
-    iswTokenizeCard,
+    iswTokeniseCard,
   ].join('');
 
   return htmlInputs;
