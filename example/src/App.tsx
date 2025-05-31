@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { View, StyleSheet, Text, Button } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { IswPaymentWebView } from 'react-native-interswitch-pay';
 
 type TIswPaymentWebViewRef = React.ComponentRef<typeof IswPaymentWebView>;
@@ -12,12 +12,12 @@ export default function App() {
       name: 'Mike',
       id: '33',
     },
-    amount: 5000,
+    amount: 1000,
     currency: 566,
     mode: 'TEST',
-    merchantCode: 'MX6072',
-    payItem: { id: '9405967' },
-    transactionRef: '12344grtr',
+    merchantCode: 'MX19329',
+    payItem: { id: 'Default_Payable_MX19329' },
+    transactionRef: `TRN-${Date.now()}`,
     redirectUrl: 'https://example.com/payment-response',
     checkoutUrl: 'https://newwebpay.qa.interswitchng.com/collections/w/pay',
   };
@@ -28,7 +28,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Interswitch Payment</Text>
       <IswPaymentWebView
         autoStart={false}
         ref={IswPaymentWebViewRef}
@@ -43,18 +42,18 @@ export default function App() {
         redirectUrl={payParams.redirectUrl}
         checkoutUrl={payParams.checkoutUrl}
       />
-      <Button
-        title="Start"
-        onPress={() => {
-          IswPaymentWebViewRef.current?.start();
-        }}
-      />
-      <Button
-        title="Stop"
-        onPress={() => {
-          IswPaymentWebViewRef.current?.end();
-        }}
-      />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => IswPaymentWebViewRef.current?.start()}
+      >
+        <Text style={styles.buttonText}>Start Payment</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.stopButton]}
+        onPress={() => IswPaymentWebViewRef.current?.end()}
+      >
+        <Text style={styles.buttonText}>Stop Payment</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -62,8 +61,25 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 40,
+  },
+  title: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  button: {
+    marginTop: '20%',
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+  },
+  stopButton: {
+    backgroundColor: '#dc3545',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
