@@ -36,7 +36,6 @@
       document.head.appendChild(script);
     }
 
-    // Handle payment completion
     function paymentCallback(response) {
       console.log('Payment callback:', response);
 
@@ -68,7 +67,6 @@
         onComplete: paymentCallback,
       };
 
-      // Optional fields
       if (params.cust_name) paymentRequest.cust_name = params.cust_name;
       if (params.cust_email) paymentRequest.cust_email = params.cust_email;
       if (params.cust_id) paymentRequest.cust_id = params.cust_id;
@@ -77,16 +75,14 @@
       if (params.access_token) paymentRequest.access_token = params.access_token;
       if (params.pay_item_name) paymentRequest.pay_item_name = params.pay_item_name;
 
-      // Handle optional JSON array
       if (params.split_accounts) {
         try {
-          paymentRequest.split_accounts = JSON.stringify(params.split_accounts);
+          paymentRequest.split_accounts = JSON.stringify(JSON.parse(params.split_accounts));
         } catch (err) {
           console.error('Invalid split_accounts JSON:', err);
         }
       }
 
-      // Validate required fields
       const requiredFields = [
         'pay_item_id',
         'txn_ref',
@@ -99,7 +95,7 @@
       const hasAllRequired = requiredFields.every(field => paymentRequest[field]);
 
       if (hasAllRequired) {
-        console.log('Starting payment with:', paymentRequest);
+        console.log('Starting payment with:', paymentRequest?.split_accounts);
         window.webpayCheckout(paymentRequest);
       } else {
         const missing = requiredFields.filter(f => !paymentRequest[f]);
