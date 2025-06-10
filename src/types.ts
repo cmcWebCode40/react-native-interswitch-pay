@@ -28,7 +28,7 @@ export interface IswPaymentWebViewProps {
    */
   customer?: IswCustomer;
   /**
-   * Flag to indicate whether you want the customer's card to be tokenised, a tokenised value would be returned when you requery to confrim the transaction status
+   * Flag to indicate whether you want the customer's card to be tokenized, a tokenized value would be returned when you re-query to confirm the transaction status
    */
   tokeniseCard?: 'true' | 'false';
   /**
@@ -37,19 +37,14 @@ export interface IswPaymentWebViewProps {
   payItem: IswPayItem;
 
   /**
-   *  Merchant's website redirect url
-   */
-  redirectUrl?: string;
-
-  /**
    * transaction reference
    */
-  transactionReference?: string;
+  trnxRef?: string;
 
   /**
    * ISW merchant code
    */
-  merchantCode?: string;
+  merchantCode: string;
   /**
    * Cost of the item you want your customer to pay
    */
@@ -64,22 +59,17 @@ export interface IswPaymentWebViewProps {
    * The callback function that returns the state of a transaction.
    *
    */
-  onCompleted: <T = object>(response?: T) => void;
-
-  /**
-   * callback to handle web view message event
-   */
-  onWebMessage?: (data: string) => void;
+  onCompleted: (response: WebCheckoutPayResponse) => void;
 
   /**
    * Access token value gotten from passport
    */
-  accessToken?: 'true' | 'fals';
+  accessToken?: 'true' | 'false';
 
   /**
    * ISO currency code
    */
-  currency: number | string;
+  currency?: number | string;
   /**
    * The mode of the payment
    */
@@ -87,24 +77,20 @@ export interface IswPaymentWebViewProps {
   /**
    * Indicator Color
    */
-  indcatorColor?: ColorValue;
-
-  /**
-   * ISW webchkout url
-   */
-  checkoutUrl: string;
+  indicatorColor?: ColorValue;
 
   /**
    * ISW Split accounts for settlements
    */
   splitAccounts?: SplitAccounts[];
+
   /**
    * Custom back button
    */
   backButton?: React.ReactNode;
 
   /**
-   * Custom WebView component  stylem
+   * Custom WebView component  style
    */
   style?: StyleProp<ViewStyle>;
 
@@ -123,3 +109,15 @@ export type SplitAccounts = {
   percentage?: string;
   isPrimary?: boolean | string;
 };
+
+export interface WebCheckoutPayResponse {
+  payRef: string;
+  txnref?: string;
+  amount: number | string;
+  apprAmt: number | string;
+  resp: string;
+  desc?: string;
+  retRef: string;
+  cardNum: string;
+  mac: string;
+}
