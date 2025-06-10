@@ -5,24 +5,22 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet } from 'react-native';
-import {
-  WebView,
-  type WebViewNavigation,
-  type WebViewMessageEvent,
-} from 'react-native-webview';
-import { getHtmlInputsFields, getWebCheckoutHtmlContent } from './utils';
-import type { IswPaymentWebViewProps, IswWebViewRefMethods } from './types';
+import { Modal, StyleSheet } from 'react-native';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import type {
+  IswPaymentWebViewProps,
+  IswWebViewRefMethods,
+  WebCheckoutPayResponse,
+} from './types';
 import { BackDrop } from './Backdrop';
-
-const DefaultRedirectUrl = 'https://newwebpay.interswitchng.com/';
+import { SITE_REDIRECT_URL, transactionMessages, WEB_PAY_HOST } from './utils';
 
 const IswPaymentWebView: React.ForwardRefRenderFunction<
   IswWebViewRefMethods,
   IswPaymentWebViewProps
 > = (
   {
-    transactionReference,
+    trnxRef,
     mode,
     onCompleted,
     payItem,
@@ -32,14 +30,12 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     amount,
     currency = 566,
     customer,
-    onWebMessage,
-    checkoutUrl,
     autoStart,
+    indicatorColor,
     backButton,
     splitAccounts,
-    showBackdrop = true,
     style: customStyle,
-    redirectUrl = DefaultRedirectUrl,
+    showBackdrop = true,
   },
   ref
 ) => {
@@ -50,11 +46,13 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
   useEffect(() => {
     if (autoStart) {
       setOpenModal(true);
+      setIsLoading(true);
     }
   }, [autoStart]);
 
   useImperativeHandle(ref, () => ({
     start() {
+      setIsLoading(true);
       setOpenModal(true);
     },
     end() {
@@ -62,66 +60,139 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     },
   }));
 
-  const inputs = getHtmlInputsFields({
-    amount,
-    currency,
-    mode,
-    payItem,
-    accessToken,
-    customer,
-    merchantCode,
-    tokeniseCard,
-    transactionReference,
-    redirectUrl,
-    splitAccounts,
-  });
-
-  const htmlContent = getWebCheckoutHtmlContent(checkoutUrl, inputs);
-
   const onMessageHandler = (event: WebViewMessageEvent) => {
-    const data = event.nativeEvent?.data;
-    const webResponse = JSON.parse(data);
-    if (onWebMessage) {
-      onWebMessage(webResponse);
-    }
-  };
-
-  const handleNavigationStateChange = (state: WebViewNavigation) => {
-    if (state.url === redirectUrl) {
+    const postMessageResponse = JSON.parse(event.nativeEvent.data);
+    if (postMessageResponse.type === 'PAYMENT_RESPONSE') {
       setOpenModal(false);
-      onCompleted();
+    }
+    const webCheckoutResponse =
+      postMessageResponse.data as WebCheckoutPayResponse;
+    if (onCompleted) {
+      onCompleted({
+        ...webCheckoutResponse,
+        desc: transactionMessages?.[webCheckoutResponse.resp],
+      });
     }
   };
 
   const cancelProcess = () => {
     setIsLoading(false);
-    onCompleted();
+    setOpenModal(false);
+    onCompleted({
+      desc: 'Payment modal terminated',
+      amount: amount,
+      cardNum: '',
+      mac: '',
+      retRef: '',
+      resp: 'Z6',
+      txnref: trnxRef,
+      payRef: '',
+      apprAmt: amount,
+    });
   };
 
+  if (!payItem?.id || !trnxRef || !amount || !merchantCode || !mode) {
+    throw new Error(
+      'Missing required payment parameters: pay_item_id, txn_ref, amount, merchant_code, mode'
+    );
+  }
+
+  const parsedAmount = Number(amount);
+  if (isNaN(parsedAmount)) {
+    throw new Error('Amount must be a valid number');
+  }
+
+  const requestParams: Record<string, any> = {
+    mode,
+    currency,
+    txn_ref: trnxRef,
+    pay_item_id: payItem.id,
+    amount: parsedAmount,
+    merchant_code: merchantCode,
+    site_redirect_url: SITE_REDIRECT_URL,
+  };
+
+  if (customer?.name) {
+    requestParams.cust_name = customer.name;
+  }
+  if (customer?.email) {
+    requestParams.cust_email = customer.email;
+  }
+  if (customer?.id) {
+    requestParams.cust_id = customer.id;
+  }
+  if (customer?.phoneNumber) {
+    requestParams.cust_mobile_no = customer.phoneNumber;
+  }
+  if (tokeniseCard) {
+    requestParams.tokenise_card = tokeniseCard;
+  }
+  if (accessToken) {
+    requestParams.access_token = accessToken;
+  }
+  if (splitAccounts) {
+    requestParams.split_accounts = splitAccounts;
+  }
+
+  const queryParams = new URLSearchParams({
+    pay_item_id: requestParams.pay_item_id,
+    txn_ref: requestParams.txn_ref,
+    amount: requestParams.amount.toString(),
+    currency: requestParams.currency.toString(),
+    merchant_code: requestParams.merchant_code,
+    mode: requestParams.mode,
+  });
+
+  if (requestParams.cust_name) {
+    queryParams.append('cust_name', requestParams.cust_name);
+  }
+  if (requestParams.cust_email) {
+    queryParams.append('cust_email', requestParams.cust_email);
+  }
+  if (requestParams.cust_id) {
+    queryParams.append('cust_id', requestParams.cust_id);
+  }
+  if (requestParams.cust_mobile_no) {
+    queryParams.append('cust_mobile_no', requestParams.cust_mobile_no);
+  }
+  if (requestParams.tokenise_card) {
+    queryParams.append('tokenise_card', requestParams.tokenise_card);
+  }
+  if (requestParams.access_token) {
+    queryParams.append('access_token', requestParams.access_token);
+  }
+  if (requestParams.split_accounts) {
+    queryParams.append(
+      'split_accounts',
+      JSON.stringify(requestParams.split_accounts)
+    );
+  }
+  const webviewUrl = `${WEB_PAY_HOST}?${queryParams.toString()}`;
+
   return (
-    <>
-      {openModal ? (
-        <WebView
-          ref={webViewRef}
-          onMessage={onMessageHandler}
-          source={{ html: htmlContent }}
-          onLoadStart={() => setIsLoading(true)}
-          onLoadEnd={() => setIsLoading(false)}
-          onError={() => {
-            setIsLoading(false);
-          }}
-          style={[style.flex, customStyle]}
-          onNavigationStateChange={handleNavigationStateChange}
-        />
-      ) : null}
+    <Modal visible={openModal}>
+      <WebView
+        source={{ uri: webviewUrl }}
+        ref={webViewRef}
+        onMessage={onMessageHandler}
+        style={[style.flex, customStyle]}
+        onLoadStart={() => setIsLoading(true)}
+        onLoadEnd={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+        }}
+        javaScriptEnabled={true}
+        originWhitelist={['*']}
+      />
       {showBackdrop && (
         <BackDrop
+          color={indicatorColor}
           backButton={backButton}
           isLoading={isLoading}
           onClose={cancelProcess}
         />
       )}
-    </>
+    </Modal>
   );
 };
 export default forwardRef(IswPaymentWebView);
@@ -129,6 +200,5 @@ export default forwardRef(IswPaymentWebView);
 const style = StyleSheet.create({
   flex: {
     flex: 1,
-    marginTop: 24,
   },
 });

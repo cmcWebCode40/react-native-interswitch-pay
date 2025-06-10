@@ -19,7 +19,7 @@ export interface BackDropProps extends Omit<ModalProps, 'children | visible'> {
 }
 
 export const BackDrop: React.FunctionComponent<BackDropProps> = ({
-  color = 'red',
+  color = 'blue',
   isLoading,
   onClose,
   backButton,

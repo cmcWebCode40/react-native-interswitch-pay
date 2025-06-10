@@ -141,5 +141,4 @@ export const transactionMessages: Record<string, string> = {
 
 export const WEB_PAY_HOST = 'https://react-native-interswitch-pay.vercel.app';
 
-// A Required field for IPG inline checkout
 export const SITE_REDIRECT_URL = 'https://blank.org';
