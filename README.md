@@ -9,7 +9,7 @@ The Interswitch React Native SDK simplifies the integration of the Interswitch P
 ## Features
 
 - Flexible implementation following the [official documentation](https://docs.interswitchgroup.com/docs/web-checkout).
-- Integrated with the [Interswitch Web Redirect](https://docs.interswitchgroup.com/docs/web-checkout#option-2---web-redirect).
+- Integrated with the [ Inline Checkout](https://docs.interswitchgroup.com/docs/web-checkout#option-1---inline-checkout).
 - Built with TypeScript for type safety and an enhanced developer experience.
 - Supports both Expo and React Native CLI.
 
@@ -40,75 +40,40 @@ expo  install react-native-interswitch-pay
 #### Auto start Payment
 
 ```js
-import { View } from 'react-native';
-import { IswPaymentWebView } from 'react-native-interswitch-pay';
+import { useRef, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import {
+  IswPaymentWebView,
+  type IswWebViewRefMethods,
+} from 'react-native-interswitch-pay';
 
-export const PaymentScreen = () => {
-  const handleCallback = () => {
-    console.log('Handle callback here');
+export default function App() {
+  const [txnRef, setTxnRef] = useState(`txn_${Date.now()}`);
+
+  const isw = {
+    merchantCode: 'MX6072',
+    payItemId: '9405967',
+    transactionRef: txnRef,
+    amount: 100000,
+    currency: '566',
+    mode: 'TEST',
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.text}>Interswitch Payment Gateway</Text>
       <IswPaymentWebView
-        amount={amount}
-        currency={566}
-        mode={'TEST'}
+        amount={isw.amount}
         autoStart={true}
-        payItem={{ id: '9405967' }}
-        merchantCode={'MX6072'}
-        onCompleted={handleCallback}
-        transactionReference={'12344grtr'}
-        redirectUrl="https://example.com/payment-response"
-        checkoutUrl={'https://newwebpay.qa.interswitchng.com/collections/w/pay'}
-      />
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: '10%',
-  },
-});
-```
-
-#### Use with Ref to trigger using a button
-
-```js
-import * as React from 'react';
-import { Button, StyleSheet, View } from 'react-native';
-import { IswPaymentWebView } from 'react-native-interswitch-pay';
-
-
-// Note: For typescript  support
-type TIswPaymentWebView = React.ComponentRef<typeof IswPaymentWebView>;
-
-export default function App() {
-  const IswWebViewRef = React.useRef<TIswPaymentWebView>(null);
-
-  return (
-    <View style={styles.container}>
-        <IswPaymentWebView
-          amount={amount}
-          currency={566}
-          mode={'TEST'}
-          autoStart={false}
-          ref={IswWebViewRef}
-          payItem={{id: '9405967'}}
-          merchantCode={'MX6072'}
-          onCompleted={handleCallback}
-          transactionReference={'12344grtr'}
-          redirectUrl="https://example.com/payment-response"
-          checkoutUrl={'https://newwebpay.qa.interswitchng.com/collections/w/pay'}
-        />
-      <Button
-        onPress={() => {
-          IswWebViewRef.current?.start();
+        trnxRef={txnRef}
+        showBackdrop={false}
+        mode={isw.mode as any}
+        merchantCode={isw.merchantCode}
+        payItem={{ id: isw.payItemId }}
+        style={styles.webViewStyle}
+        onCompleted={(response) => {
+          console.log('Response', response);
         }}
-        title={'Pay Now'}
       />
     </View>
   );
@@ -117,34 +82,145 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: '10%',
+    paddingTop: 40,
+    paddingHorizontal: 24,
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
+  text: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 20,
+  },
+  webViewStyle: {
+    marginTop: '10%',
   },
 });
+
+```
+
+#### Use with Ref to trigger using a button
+
+```js
+import { useRef, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import {
+  IswPaymentWebView,
+  type IswWebViewRefMethods,
+} from 'react-native-interswitch-pay';
+
+export default function App() {
+  const webRef = useRef<IswWebViewRefMethods>(null);
+  const [txnRef, setTxnRef] = useState(`txn_${Date.now()}`);
+
+  const handleStartPayment = () => {
+    try {
+      const newTxnRef = `txn_${Date.now()}`;
+      setTxnRef(newTxnRef);
+
+      // Added this delay for Test purposes, so you can test multiple times
+      setTimeout(() => {
+        webRef.current?.start();
+      }, 100);
+    } catch (error) {
+      Alert.alert('Validation Error', (error as Error).message);
+    }
+  };
+
+  const isw = {
+    merchantCode: 'MX6072',
+    payItemId: '9405967',
+    transactionRef: txnRef,
+    amount: 100000,
+    currency: '566',
+    mode: 'TEST',
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Interswitch Payment Gateway</Text>
+      <TouchableOpacity style={styles.button} onPress={handleStartPayment}>
+        <Text style={styles.buttonText}>Start Payment</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.stopButton]}
+        onPress={() => webRef.current?.end()}
+      >
+        <Text style={styles.buttonText}>Stop Payment</Text>
+      </TouchableOpacity>
+      <IswPaymentWebView
+        ref={webRef}
+        amount={isw.amount}
+        autoStart={false}
+        trnxRef={txnRef}
+        showBackdrop={false}
+        mode={isw.mode as any}
+        merchantCode={isw.merchantCode}
+        payItem={{ id: isw.payItemId }}
+        style={styles.webViewStyle}
+        onCompleted={(response) => {
+          console.log('Response', response);
+        }}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 40,
+    paddingHorizontal: 24,
+  },
+  text: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 20,
+  },
+  title: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: 'bold',
+  },
+  button: {
+    marginTop: '20%',
+    backgroundColor: '#007bff',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  stopButton: {
+    backgroundColor: '#dc3545',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  webViewStyle: {
+    marginTop: '10%',
+  },
+});
+
 ```
 
 ### Props
 
 | Props Name           | Description                                           | Required | Value             | Data type |
 | -------------------- | ----------------------------------------------------- | -------- | ----------------- | --------- |
-| transactionReference | transaction reference.                                | Yes      |                   | string    |
+| trnxRef | transaction reference.                                | Yes      |                   | string    |
 | merchantCode         | ISW merchant code                                     | Yes      |                   | string    |
-| amount               | Cost of the item you want your customer to pay        | Yes      |                   | number    |
+| amount               | Cost of the item you want your customer to pay in Kobo e.g amount * 100       | Yes      |                   | number    |
 | customer             | Customer information e.g email, first name, last name | No       |                   | object    |
 | payItem              | Payment Item e.g id and name                          | Yes      |                   | object[]  |
 | autoStart            | To auto initialize transaction                        | No       | false             | boolean   |
 | indicatorColor       | activity indicator color                              | No       | red               | string    |
-| redirectUrl          | Merchant's website redirect url.                      | Yes      |                   | string    |
 | currency             | ISO currency code e.g 566                             | Yes      | e.g 566           | number    |
 | mode                 | Environment e.g LIVE, TEST                            | Yes      | TEST              | string    |
 | onCompleted          | Callback that triggers when webview close or cancels  | Yes      |                   | Function  |
 | splitAccounts        | ISW Split accounts for settlements                    | No       | `SplitAccounts[]` | Array     |
-| onWebMessage         | Callback to handle web view message event             | no       |                   | Function  |
+| showBackdrop        | Display loading backdrop                     | No       | false | boolean     |
+| style        | WebView component custom style                   | No       | object | ViewStyle     |
+
+| backButton        | custom back button style                   | No       | undefined | React Node      |
+
 
 ## Contributing
 
