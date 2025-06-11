@@ -35,7 +35,7 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     backButton,
     splitAccounts,
     style: customStyle,
-    showBackdrop = true,
+    showBackdrop = false,
   },
   ref
 ) => {
@@ -49,31 +49,6 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
       setIsLoading(true);
     }
   }, [autoStart]);
-
-  useImperativeHandle(ref, () => ({
-    start() {
-      setIsLoading(true);
-      setOpenModal(true);
-    },
-    end() {
-      setOpenModal(false);
-    },
-  }));
-
-  const onMessageHandler = (event: WebViewMessageEvent) => {
-    const postMessageResponse = JSON.parse(event.nativeEvent.data);
-    if (postMessageResponse.type === 'PAYMENT_RESPONSE') {
-      setOpenModal(false);
-    }
-    const webCheckoutResponse =
-      postMessageResponse.data as WebCheckoutPayResponse;
-    if (onCompleted) {
-      onCompleted({
-        ...webCheckoutResponse,
-        desc: transactionMessages?.[webCheckoutResponse.resp],
-      });
-    }
-  };
 
   const cancelProcess = () => {
     setIsLoading(false);
@@ -89,6 +64,34 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
       payRef: '',
       apprAmt: amount,
     });
+  };
+
+  useImperativeHandle(ref, () => ({
+    start() {
+      setIsLoading(true);
+      setOpenModal(true);
+    },
+    end() {
+      cancelProcess();
+    },
+  }));
+
+  const onMessageHandler = (event: WebViewMessageEvent) => {
+    const postMessageResponse = JSON.parse(event.nativeEvent.data);
+    if (postMessageResponse.type === 'PAYMENT_RESPONSE') {
+      setOpenModal(false);
+      const webCheckoutResponse =
+        postMessageResponse.data as WebCheckoutPayResponse;
+      if (onCompleted) {
+        onCompleted({
+          ...webCheckoutResponse,
+          desc: transactionMessages?.[webCheckoutResponse.resp],
+        });
+      }
+    }
+    if (postMessageResponse.type === 'PAYMENT_MODAL_TERMINATED') {
+      cancelProcess();
+    }
   };
 
   if (!payItem?.id || !trnxRef || !amount || !merchantCode || !mode) {
