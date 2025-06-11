@@ -46,7 +46,7 @@ export interface IswPaymentWebViewProps {
    */
   merchantCode: string;
   /**
-   * Cost of the item you want your customer to pay
+   * Cost of the item you want your customer to pay in Kobo. (Your amount * 100)
    */
   amount: number | string;
 
