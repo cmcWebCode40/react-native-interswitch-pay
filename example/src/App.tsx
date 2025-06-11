@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
-import { IswPaymentWebView } from 'react-native-interswitch-pay';
-import type { IswWebViewRefMethods } from '../../src/types';
+import {
+  IswPaymentWebView,
+  type IswWebViewRefMethods,
+} from 'react-native-interswitch-pay';
 
 export default function App() {
   const webRef = useRef<IswWebViewRefMethods>(null);
@@ -12,6 +14,7 @@ export default function App() {
       const newTxnRef = `txn_${Date.now()}`;
       setTxnRef(newTxnRef);
 
+      // Added this delay for Test purposes, so you can test multiple times
       setTimeout(() => {
         webRef.current?.start();
       }, 100);
@@ -21,33 +24,17 @@ export default function App() {
   };
 
   const isw = {
-    merchantCode: 'MX189360',
-    payItemId: 'Default_Payable_MX189360',
+    merchantCode: 'MX6072',
+    payItemId: '9405967',
     transactionRef: txnRef,
     amount: 100000,
     currency: '566',
     mode: 'TEST',
-    customerName: 'Interswitch Energy Platform',
-    customerId: '40375312338625',
-    splitAccounts: [
-      {
-        alias: 'Merchant Account',
-        amount: 50000,
-        description: 'Meter top up',
-        isPrimary: true,
-      },
-      {
-        alias: 'Indeco Convenience Account 1',
-        amount: 50000,
-        description: 'Meter top up convenience fee',
-        isPrimary: false,
-      },
-    ],
-    customerEmail: 'innovation@interswitchng.com',
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.text}>Interswitch Payment Gateway</Text>
       <TouchableOpacity style={styles.button} onPress={handleStartPayment}>
         <Text style={styles.buttonText}>Start Payment</Text>
       </TouchableOpacity>
@@ -61,14 +48,15 @@ export default function App() {
         ref={webRef}
         amount={isw.amount}
         autoStart={false}
+        trnxRef={txnRef}
+        showBackdrop={false}
         mode={isw.mode as any}
         merchantCode={isw.merchantCode}
-        trnxRef={txnRef}
         payItem={{ id: isw.payItemId }}
+        style={styles.webViewStyle}
         onCompleted={(response) => {
           console.log('AcceptPaymentScreen', response);
         }}
-        splitAccounts={isw.splitAccounts}
       />
     </View>
   );
@@ -78,6 +66,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 40,
+    paddingHorizontal: 24,
+  },
+  text: {
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 20,
   },
   title: {
     fontSize: 18,
@@ -87,9 +81,9 @@ const styles = StyleSheet.create({
   button: {
     marginTop: '20%',
     backgroundColor: '#007bff',
-    paddingVertical: 10,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   stopButton: {
     backgroundColor: '#dc3545',
@@ -97,5 +91,8 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  webViewStyle: {
+    marginTop: '10%',
   },
 });
