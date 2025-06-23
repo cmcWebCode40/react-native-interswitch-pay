@@ -102,7 +102,7 @@ export interface IswPaymentWebViewProps {
   /**
    * Custom  loading Text
    */
-  loadingText?: boolean;
+  loadingText?: string;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
