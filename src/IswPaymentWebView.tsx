@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Modal, StyleSheet } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type {
   IswPaymentWebViewProps,
@@ -33,6 +33,7 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     autoStart,
     indicatorColor,
     backButton,
+    loadingText,
     splitAccounts,
     style: customStyle,
     showBackdrop = false,
@@ -41,18 +42,20 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
 ) => {
   const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [initializingWebView, setInitializingWebView] = useState(false);
   const webViewRef = useRef(null);
 
   useEffect(() => {
     if (autoStart) {
+      setInitializingWebView(true);
       setOpenModal(true);
-      setIsLoading(true);
     }
   }, [autoStart]);
 
   const cancelProcess = () => {
     setIsLoading(false);
     setOpenModal(false);
+    setInitializingWebView(false);
     onCompleted({
       desc: 'Payment modal terminated',
       amount: amount,
@@ -68,6 +71,7 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
 
   useImperativeHandle(ref, () => ({
     start() {
+      setInitializingWebView(true);
       setIsLoading(true);
       setOpenModal(true);
     },
@@ -174,12 +178,23 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
 
   return (
     <Modal visible={openModal}>
+      {initializingWebView && (
+        <View style={style.loaderContainer}>
+          <Text style={style.loaderText}>
+            {loadingText ?? 'Loading Payment Gateway, Please wait.'}
+          </Text>
+          <ActivityIndicator color={indicatorColor} />
+        </View>
+      )}
       <WebView
         source={{ uri: webviewUrl }}
         ref={webViewRef}
         onMessage={onMessageHandler}
         style={[style.flex, customStyle]}
-        onLoadStart={() => setIsLoading(true)}
+        onLoadStart={() => {
+          setIsLoading(true);
+          setInitializingWebView(false);
+        }}
         onLoadEnd={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);
@@ -203,5 +218,14 @@ export default forwardRef(IswPaymentWebView);
 const style = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  loaderContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    marginTop: '25%',
+  },
+  loaderText: {
+    marginBottom: 10,
   },
 });

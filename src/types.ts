@@ -98,6 +98,11 @@ export interface IswPaymentWebViewProps {
    * Show backdrop
    */
   showBackdrop?: boolean;
+
+  /**
+   * Custom  loading Text
+   */
+  loadingText?: boolean;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
