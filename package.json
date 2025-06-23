@@ -1,6 +1,6 @@
 {
   "name": "react-native-interswitch-pay",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Interswitch payment gateway for React Native ",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
