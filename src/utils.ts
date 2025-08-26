@@ -139,6 +139,6 @@ export const transactionMessages: Record<string, string> = {
   '20050': 'Wrong hash computation.',
 };
 
-export const WEB_PAY_HOST = 'https://react-native-interswitch-pay.vercel.app';
+export const WEB_PAY_HOST = 'https://isw-inline-checkout-webview.k8.isw.la';
 
 export const SITE_REDIRECT_URL = 'https://blank.org';
