@@ -97,6 +97,72 @@ const styles = StyleSheet.create({
 
 ```
 
+#### Use with custom WebPay Callback Response payload.
+
+```js
+import { useRef, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import {
+  IswPaymentWebView,
+  type IswWebViewRefMethods,
+} from 'react-native-interswitch-pay';
+
+
+interface CustomData {
+  userId: string;
+  orderId: number;
+  cardProductionBin: string;
+}
+
+export default function App() {
+ // rest of the code.
+
+  const isw = {
+    merchantCode: 'MX6072',
+    payItemId: '9405967',
+    transactionRef: txnRef,
+    amount: 100000,
+    currency: '566',
+    mode: 'TEST',
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Interswitch Payment Gateway</Text>
+      <TouchableOpacity style={styles.button} onPress={handleStartPayment}>
+        <Text style={styles.buttonText}>Start Payment</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.stopButton]}
+        onPress={() => webRef.current?.end()}
+      >
+        <Text style={styles.buttonText}>Stop Payment</Text>
+      </TouchableOpacity>
+      <IswPaymentWebView<CustomData>
+        ref={webRef}
+        amount={isw.amount}
+        autoStart={false}
+        trnxRef={txnRef}
+        showBackdrop={false}
+        mode={isw.mode as any}
+        merchantCode={isw.merchantCode}
+        payItem={{ id: isw.payItemId }}
+        style={styles.webViewStyle}
+        onCompleted={(response) => {
+          console.log('Response', response);
+          console.log('Custom Response Data:', response.cardProductionBin);
+        }}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+ // styles
+});
+
+```
+
 #### Use with Ref to trigger using a button
 
 ```js
@@ -200,6 +266,7 @@ const styles = StyleSheet.create({
 });
 
 ```
+
 
 ### Props
 
