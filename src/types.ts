@@ -22,7 +22,7 @@ export type GetHtmlInputsFields = Omit<
   'onCompleted' | 'onWebMessage' | 'autoStart' | 'checkoutUrl'
 >;
 
-export interface IswPaymentWebViewProps {
+export interface IswPaymentWebViewProps<T = {}> {
   /**
    * Customer information e.g email, first name, last name
    */
@@ -59,7 +59,7 @@ export interface IswPaymentWebViewProps {
    * The callback function that returns the state of a transaction.
    *
    */
-  onCompleted: (response: WebCheckoutPayResponse) => void;
+  onCompleted: (response: WebCheckoutPayResponse & T) => void;
 
   /**
    * Access token value gotten from passport

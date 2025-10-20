@@ -13,7 +13,12 @@ import type {
   WebCheckoutPayResponse,
 } from './types';
 import { BackDrop } from './Backdrop';
-import { SITE_REDIRECT_URL, transactionMessages, WEB_PAY_HOST } from './utils';
+import {
+  SITE_REDIRECT_URL,
+  transactionMessages,
+  WEB_PAY_HOST_DEV,
+  WEB_PAY_HOST_PROD,
+} from './utils';
 
 const IswPaymentWebView: React.ForwardRefRenderFunction<
   IswWebViewRefMethods,
@@ -174,6 +179,7 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
       JSON.stringify(requestParams.split_accounts)
     );
   }
+  const WEB_PAY_HOST = mode === 'LIVE' ? WEB_PAY_HOST_PROD : WEB_PAY_HOST_DEV;
   const webviewUrl = `${WEB_PAY_HOST}?${queryParams.toString()}`;
 
   return (
@@ -213,7 +219,10 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     </Modal>
   );
 };
-export default forwardRef(IswPaymentWebView);
+
+export default forwardRef(IswPaymentWebView) as <T = {}>(
+  props: IswPaymentWebViewProps<T> & { ref?: React.Ref<IswWebViewRefMethods> }
+) => React.ReactElement;
 
 const style = StyleSheet.create({
   flex: {
