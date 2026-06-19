@@ -15,6 +15,8 @@ import {
   type WebCheckoutPayResponse,
 } from 'react-native-interswitch-pay';
 
+const isTablet = Platform.OS === 'ios' && Platform.isPad;
+
 export default function App() {
   const [amount, setAmount] = useState<string | undefined>(undefined);
   const [response, setResponse] = useState<WebCheckoutPayResponse | undefined>(
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
   },
   webViewStyle: {
     marginTop: Platform.select({
-      ios: '10%',
+      ios: isTablet ? '0%' : '10%',
       android: '0%',
     }),
   },
