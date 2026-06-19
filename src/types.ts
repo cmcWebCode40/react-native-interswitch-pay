@@ -103,6 +103,10 @@ export interface IswPaymentWebViewProps<T = {}> {
    * Custom  loading Text
    */
   loadingText?: string;
+  /**
+   * Custom web pay base URL
+   */
+  webPayBaseUrl?: string;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
