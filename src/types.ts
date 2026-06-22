@@ -62,6 +62,11 @@ export interface IswPaymentWebViewProps<T = {}> {
   onCompleted: (response: WebCheckoutPayResponse & T) => void;
 
   /**
+   * Optional callback for WebView / initialization errors forwarded from the payment HTML.
+   */
+  onError?: (error: { error: string }) => void;
+
+  /**
    * Access token value gotten from passport
    */
   accessToken?: 'true' | 'false';
@@ -107,6 +112,11 @@ export interface IswPaymentWebViewProps<T = {}> {
    * Custom web pay base URL
    */
   webPayBaseUrl?: string;
+
+  /**
+   * Sit Redirect URL
+   */
+  siteRedirectUrl?: string;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
