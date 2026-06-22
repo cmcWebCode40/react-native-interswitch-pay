@@ -261,8 +261,6 @@
       }
 
       loadScript(scriptUrl, () => {
-        console.log(params, "Received payment parameters");
-        
         const paymentRequest = {
           mode,
           pay_item_id: params.pay_item_id,
