@@ -3,135 +3,346 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; 
+        script-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com 'unsafe-inline'; 
+        connect-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com ws://127.0.0.1:5500; 
+        frame-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com;
+        style-src 'unsafe-inline';" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <title>Interswitch WebPay</title>
 </head>
 
 <body>
-  <p id="statusText" style="text-align: center; margin-top: 1rem;">Please wait....</p>
-  <div style="text-align: center; margin-top: 2rem;">
+  <p id="statusText" style="text-align: center; margin-top: 1rem">
+    Please wait....
+  </p>
+  <div style="text-align: center; margin-top: 2rem">
     <button id="fallbackButton" onclick="redirectBackToApp()" style="
-        display: block;
-        padding: 0.75rem 1.5rem;
-        background-color: white;
-        color: black;
-        border: 2px solid black;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        margin: auto;
-        margin-top: 25%;
-      ">
+          display: block;
+          padding: 0.75rem 3.5rem;
+          background-color: #0275D8;
+          color: white;
+          border: 0px solid white;
+          border-radius: 8px;
+          font-size: 1rem;
+          cursor: pointer;
+          margin: auto;
+          margin-top: 25%;
+        ">
       Cancel
     </button>
-    <script>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const ALLOWED_PARAMS = [
+        "pay_item_id",
+        "txn_ref",
+        "amount",
+        "currency",
+        "merchant_code",
+        "mode",
+        "cust_name",
+        "cust_email",
+        "cust_id",
+        "cust_mobile_no",
+        "tokenise_card",
+        "access_token",
+        "pay_item_name",
+        "split_accounts",
+        "site_redirect_url",
+      ];
+
       function getQueryParams() {
         const params = {};
-        window.location.search
+        const rejectedParams = [];
+        const allowedValues = new Set(ALLOWED_PARAMS);
+        globalThis.location.search
           .substring(1)
-          .split('&')
+          .split("&")
           .forEach(function (param) {
-            const [key, value] = param.split('=');
-            if (key && value !== undefined) {
+            const [key, value] = param.split("=");
+
+            if (!key || value === undefined) return;
+
+            if (!allowedValues.has(key)) {
+              rejectedParams.push(key);
+              return;
+            }
+
+            if (key !== "split_accounts") {
+              const sanitizedValue = sanitizeString(
+                decodeURIComponent(value)
+              );
+
+              if (sanitizedValue) {
+                params[key] = sanitizedValue;
+              } else {
+                showError(`Error loading parameter`);
+                throw new TypeError("Error loading parameter");
+              }
+            } else {
               params[key] = decodeURIComponent(value);
             }
           });
+
+        if (rejectedParams.length > 0) {
+          showError(
+            `Blocked unauthorized parameters: ${rejectedParams.join(", ")}`
+          );
+          throw new TypeError(
+            `Blocked unauthorized parameters: ${rejectedParams.join(", ")}`
+          );
+        }
         return params;
       }
 
-
-      function redirectBackToApp() {
-        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'PAYMENT_MODAL_TERMINATED',
-            data: null
-          }));
-        }
+      function sanitizeString(str) {
+        if (typeof str !== "string") return "";
+        return str
+          .replaceAll(/[<>"'`]/g, "")
+          .replaceAll(/javascript:/gi, "")
+          .replaceAll(/on\w+=/gi, "")
+          .replaceAll(/data:/gi, "")
+          .trim()
+          .substring(0, 200);
       }
 
+      function showError(message) {
+        const statusText = document.getElementById("statusText");
+        if (statusText) {
+          statusText.innerText = message;
+          statusText.style.color = "red";
+        }
+      }
+      const sendMessageToNativeApp = (function () {
+        const _send = function (messageType, data) {
+          const message = JSON.stringify({
+            type: messageType,
+            data: data,
+          });
+          if (
+            globalThis.ReactNativeWebView &&
+            globalThis.ReactNativeWebView.postMessage
+          ) {
+            globalThis.ReactNativeWebView.postMessage(message);
+            return;
+          }
+          if (
+            globalThis.AndroidWebView &&
+            globalThis.AndroidWebView.postMessage
+          ) {
+            globalThis.AndroidWebView.postMessage(message);
+            return;
+          }
+          if (
+            globalThis.webkit &&
+            globalThis.webkit.messageHandlers &&
+            globalThis.webkit.messageHandlers.webView
+          ) {
+            globalThis.webkit.messageHandlers.webView.postMessage(message);
+            return;
+          }
+        };
+
+        Object.freeze(_send);
+        return _send;
+      })();
+
+      globalThis.redirectBackToApp = function () {
+        sendMessageToNativeApp("PAYMENT_MODAL_TERMINATED", null);
+      };
+
+      Object.freeze(globalThis.redirectBackToApp);
+
       function loadScript(src, callback) {
-        const script = document.createElement('script');
+        const script = document.createElement("script");
         script.src = src;
         script.onload = callback;
         script.onerror = function () {
-          document.body.innerHTML = `<p style="color:red;text-align:center;margin-top:2rem;">Failed to load payment script.</p>`;
-
+          showError("Failed to load payment script.");
+          sendMessageToNativeApp("PAYMENT_ERROR", {
+            error: "Failed to load payment script",
+          });
         };
         document.head.appendChild(script);
       }
 
-      function paymentCallback(response) {
-        console.log('Payment callback:', response);
+      const createPaymentCallback = (function () {
+        let hasBeenCalled = false;
+        return function (response) {
+          if (hasBeenCalled) {
+            sendMessageToNativeApp("PAYMENT_ERROR", {
+              error: "Duplicate callback detected",
+            });
+            return;
+          }
+          hasBeenCalled = true;
 
-        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'PAYMENT_RESPONSE',
-            data: response
-          }));
+          if (!response || typeof response !== "object") {
+            sendMessageToNativeApp("PAYMENT_ERROR", {
+              error: "Invalid response format",
+            });
+            return;
+          }
+
+          sendMessageToNativeApp("PAYMENT_RESPONSE", {
+            ...response,
+          });
+
+          const statusText = document.getElementById("statusText");
+          if (statusText) {
+            statusText.innerText = "Processing response...";
+          }
+        };
+      })();
+
+      const params = getQueryParams();
+      const mode = params?.mode?.toUpperCase();
+
+      if (!["TEST", "LIVE"].includes(mode)) {
+        showError("Invalid payment mode");
+        sendMessageToNativeApp("PAYMENT_ERROR", { error: "Invalid mode" });
+        throw new Error("Invalid payment mode");
+      }
+      const scriptUrl =
+        mode === "LIVE"
+          ? "https://newwebpay.interswitchng.com/inline-checkout.js"
+          : "https://newwebpay.qa.interswitchng.com/inline-checkout.js";
+
+      function addOptionalParams(paymentRequest) {
+        if (params.cust_name) {
+          paymentRequest.cust_name = params.cust_name.replaceAll('+', ' ');
+        }
+        if (params.cust_email) {
+          paymentRequest.cust_email = params.cust_email;
+        }
+        if (params.cust_id) {
+          paymentRequest.cust_id = params.cust_id;
+        }
+        if (params.cust_mobile_no) {
+          paymentRequest.cust_mobile_no = params.cust_mobile_no;
+        }
+
+        if (params.tokenise_card) {
+          paymentRequest.tokenise_card = params.tokenise_card;
+        }
+
+        if (params.access_token) {
+          paymentRequest.access_token = params.access_token;
+        }
+
+        if (params.pay_item_name) {
+          paymentRequest.pay_item_name = params.pay_item_name;
+        }
+
+        if (params.site_redirect_url) {
+          try {
+            const url = new URL(params.site_redirect_url);
+            if (url.protocol === "https:") {
+              paymentRequest.site_redirect_url = params.site_redirect_url;
+            } else {
+              showError("Invalid site redirect url");
+              sendMessageToNativeApp("PAYMENT_ERROR", {
+                error: "Invalid site redirect url",
+              });
+            }
+          } catch {
+            showError("Invalid site redirect url");
+            sendMessageToNativeApp("PAYMENT_ERROR", {
+              error: "Invalid site redirect url",
+            });
+            return;
+          }
         }
       }
 
-      const params = getQueryParams();
-      const mode = (params?.mode || 'TEST').toUpperCase();
-
-      const scriptUrl = mode === 'LIVE'
-        ? 'https://newwebpay.interswitchng.com/inline-checkout.js'
-        : 'https://newwebpay.qa.interswitchng.com/inline-checkout.js';
-
-
       loadScript(scriptUrl, () => {
+        console.log(params, "Received payment parameters");
+        
         const paymentRequest = {
           mode,
-          pay_item_id: params?.pay_item_id,
-          txn_ref: params?.txn_ref,
-          amount: Number(params?.amount),
-          currency: Number(params?.currency),
-          merchant_code: params?.merchant_code,
-          site_redirect_url: 'https://blank.org',
-          onComplete: paymentCallback,
+          pay_item_id: params.pay_item_id,
+          txn_ref: params.txn_ref,
+          amount: Number(params.amount),
+          currency: Number(params.currency),
+          merchant_code: params.merchant_code,
+          site_redirect_url: "https://blank.org",
+          onComplete: createPaymentCallback,
         };
 
-        if (params.cust_name) paymentRequest.cust_name = params.cust_name;
-        if (params.cust_email) paymentRequest.cust_email = params.cust_email;
-        if (params.cust_id) paymentRequest.cust_id = params.cust_id;
-        if (params.cust_mobile_no) paymentRequest.cust_mobile_no = params.cust_mobile_no;
-        if (params.tokenise_card) paymentRequest.tokenise_card = params.tokenise_card;
-        if (params.access_token) paymentRequest.access_token = params.access_token;
-        if (params.pay_item_name) paymentRequest.pay_item_name = params.pay_item_name;
-
-        if (params.split_accounts) {
-          try {
-            paymentRequest.split_accounts = JSON.stringify(JSON.parse(params.split_accounts));
-          } catch (err) {
-            console.error('Invalid split_accounts JSON:', err);
-          }
-        }
-
         const requiredFields = [
-          'pay_item_id',
-          'txn_ref',
-          'amount',
-          'currency',
-          'merchant_code',
-          'mode',
+          "pay_item_id",
+          "txn_ref",
+          "amount",
+          "currency",
+          "merchant_code",
+          "mode",
         ];
 
-        const hasAllRequired = requiredFields.every(field => paymentRequest[field]);
+        const hasAllRequired = requiredFields.every((field) => {
+          const value = paymentRequest[field];
+          return value !== undefined && value !== null && value !== "";
+        });
 
-        if (hasAllRequired) {
-          console.log('Starting payment with:', paymentRequest?.split_accounts);
-          window.webpayCheckout(paymentRequest);
-        } else {
-          const missing = requiredFields.filter(f => !paymentRequest[f]);
-          const statusText = document.getElementById('statusText');
-          if (statusText) {
-            statusText.innerText = `Missing required payment parameters: ${missing.join(', ')}`;
-            statusText.style.color = 'red';
-            statusText.style.marginTop = '2rem';
+        if (!hasAllRequired) {
+          const missing = requiredFields.filter((f) => !paymentRequest[f]);
+          showError("Missing required fields: " + missing.join(", "));
+          sendMessageToNativeApp("PAYMENT_ERROR", {
+            error: "Missing required parameters",
+          });
+          return;
+        }
+
+        if (
+          Number.isNaN(paymentRequest.amount) ||
+          paymentRequest.amount <= 0
+        ) {
+          showError("Invalid payment amount");
+          sendMessageToNativeApp("PAYMENT_ERROR", {
+            error: "Invalid amount",
+          });
+          return;
+        }
+        addOptionalParams(paymentRequest);
+        if (params.split_accounts) {
+          try {
+            const decodedStr = decodeURIComponent(params.split_accounts.replaceAll('+', ' '));
+            const jsonStr = decodedStr.trim();
+            if (!jsonStr.startsWith("[") && !jsonStr.startsWith("{")) {
+              showError("Invalid JSON structure");
+              throw new TypeError(`Invalid JSON structure`);
+            }
+            const parsed = JSON.parse(jsonStr);
+            if (!Array.isArray(parsed)) {
+              showError("split_accounts must be an array");
+              throw new TypeError(`split_accounts must be an array`);
+            }
+            paymentRequest.split_accounts = JSON.stringify(parsed);
+          } catch {
+            sendMessageToNativeApp("PAYMENT_ERROR", {
+              error: "Invalid split accounts format",
+            });
+            showError("Invalid split accounts format");
+            throw new TypeError(`Invalid split accounts format`);
           }
         }
+        try {
+          globalThis.webpayCheckout(paymentRequest);
+        } catch {
+          showError("Failed to initialize payment");
+          sendMessageToNativeApp("PAYMENT_ERROR", {
+            error: "Payment initialization failed",
+          });
+        }
       });
-    </script>
+    })();
+  </script>
 </body>
 
 </html>
+
+
