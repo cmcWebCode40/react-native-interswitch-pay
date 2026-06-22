@@ -139,10 +139,7 @@ export const transactionMessages: Record<string, string> = {
   '20050': 'Wrong hash computation.',
 };
 
-export const INLINE_CHECKOUT_URL_DEV =
-  'https://newwebpay-sandbox.interswitchng.com/inline-checkout.js';
-
-export const INLINE_CHECKOUT_URL_PROD =
-  'https://newwebpay.interswitchng.com/inline-checkout.js';
+export const INLINE_CHECKOUT_URL =
+  'https://react-native-interswitch-pay.vercel.app';
 
 export const SITE_REDIRECT_URL = 'https://blank.org';
