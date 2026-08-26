@@ -1,4 +1,11 @@
-import type { ColorValue, StyleProp, ViewStyle } from 'react-native';
+import type {
+  ColorValue,
+  ModalProps,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
+import type { WebViewProps } from 'react-native-webview';
 
 export type IswCustomer = {
   id?: string;
@@ -17,9 +24,19 @@ export type IswWebViewRefMethods = {
   end: () => void;
 };
 
-export type GetHtmlInputsFields = Omit<
+export type GetHtmlInputsFields = Pick<
   IswPaymentWebViewProps,
-  'onCompleted' | 'onWebMessage' | 'autoStart' | 'checkoutUrl'
+  | 'customer'
+  | 'tokeniseCard'
+  | 'payItem'
+  | 'trnxRef'
+  | 'merchantCode'
+  | 'amount'
+  | 'accessToken'
+  | 'currency'
+  | 'mode'
+  | 'splitAccounts'
+  | 'siteRedirectUrl'
 >;
 
 export interface IswPaymentWebViewProps<T = {}> {
@@ -109,7 +126,7 @@ export interface IswPaymentWebViewProps<T = {}> {
    */
   loadingText?: string;
   /**
-   * Custom web pay base URL
+   * Custom web pay base URL. Falls back to the hosted Interswitch checkout URL when not provided.
    */
   webPayBaseUrl?: string;
 
@@ -117,6 +134,45 @@ export interface IswPaymentWebViewProps<T = {}> {
    * Sit Redirect URL
    */
   siteRedirectUrl?: string;
+
+  /**
+   * Provide your own checkout page HTML instead of loading the hosted checkout URL, to avoid
+   * depending on it. Receives the resolved payment params and must return a full HTML document
+   * string; when set, this takes precedence over `webPayBaseUrl`.
+   */
+  getHtml?: (params: GetHtmlInputsFields) => string;
+
+  /**
+   * Custom style for the loading indicator's container, shown while the WebView initializes.
+   */
+  loaderContainerStyle?: StyleProp<ViewStyle>;
+
+  /**
+   * Custom style for the loading indicator's text.
+   */
+  loaderTextStyle?: StyleProp<TextStyle>;
+
+  /**
+   * Additional props passed through to the underlying Modal component (e.g. `animationType`,
+   * `transparent`, `presentationStyle`, `statusBarTranslucent`).
+   */
+  modalProps?: Omit<ModalProps, 'visible' | 'children'>;
+
+  /**
+   * Additional props passed through to the underlying WebView component. Useful when providing
+   * your own checkout page via `getHtml` and you need to customize WebView behavior (e.g.
+   * `injectedJavaScript`, `originWhitelist`, `allowFileAccess`).
+   */
+  webViewProps?: Omit<
+    WebViewProps,
+    | 'source'
+    | 'ref'
+    | 'onMessage'
+    | 'style'
+    | 'onLoadStart'
+    | 'onLoadEnd'
+    | 'onError'
+  >;
 }
 
 export type IswTestMode = 'TEST' | 'LIVE';
