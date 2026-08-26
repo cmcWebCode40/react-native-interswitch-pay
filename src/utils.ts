@@ -143,3 +143,12 @@ export const INLINE_CHECKOUT_URL =
   'https://react-native-interswitch-pay.vercel.app';
 
 export const SITE_REDIRECT_URL = 'https://blank.org';
+
+export const isValidHttpUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
