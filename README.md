@@ -9,7 +9,7 @@ The Interswitch React Native SDK simplifies the integration of the Interswitch P
 ## Features
 
 - Flexible implementation following the [official documentation](https://docs.interswitchgroup.com/docs/web-checkout).
-- Integrated with the [ Inline Checkout](https://docs.interswitchgroup.com/docs/web-checkout#option-1---inline-checkout).
+- Integrated with the [Inline Checkout](https://docs.interswitchgroup.com/docs/web-checkout#option-1---inline-checkout).
 - Built with TypeScript for type safety and an enhanced developer experience.
 - Supports both Expo and React Native CLI.
 
@@ -163,6 +163,43 @@ const styles = StyleSheet.create({
 
 ```
 
+#### Provide your own checkout page (avoid vendor lock-in)
+
+By default the WebView loads a hosted Interswitch inline checkout page. If you'd rather not depend on that hosted URL, pass `getHtml` to render your own HTML instead — it receives the resolved payment params and must return a full HTML document string.
+
+```js
+import {
+  IswPaymentWebView,
+  type GetHtmlInputsFields,
+} from 'react-native-interswitch-pay';
+
+const buildCheckoutHtml = (params: GetHtmlInputsFields) => `
+  <!DOCTYPE html>
+  <html>
+    <body>
+      <form
+        id="ipg-form"
+        method="post"
+        action="https://newwebpay.interswitchng.com/collections/w/pay"
+        style="display: none;"
+      >
+        <input name="merchant_code" value="${params.merchantCode}" />
+        <input name="pay_item_id" value="${params.payItem.id}" />
+        <input name="txn_ref" value="${params.trnxRef}" />
+        <input name="amount" value="${params.amount}" />
+        <input name="currency" value="${params.currency}" />
+      </form>
+      <script>document.getElementById('ipg-form').submit();</script>
+    </body>
+  </html>
+`;
+
+<IswPaymentWebView
+  // ...other required props
+  getHtml={buildCheckoutHtml}
+/>
+```
+
 #### Use with Ref to trigger using a button
 
 ```js
@@ -285,9 +322,13 @@ const styles = StyleSheet.create({
 | splitAccounts        | ISW Split accounts for settlements                    | No       | `SplitAccounts[]` | Array     |
 | showBackdrop        | Display loading backdrop                     | No       | false | boolean     |
 | style        | WebView component custom style                   | No       | object | ViewStyle     |
-
 | backButton        | custom back button style                   | No       | undefined | React Node      |
-
+| webPayBaseUrl        | Custom checkout base URL, replacing the default hosted Interswitch checkout page. Must be a valid http(s) URL. | No       | undefined | string      |
+| getHtml        | Render your own checkout HTML instead of loading `webPayBaseUrl`. Receives the resolved payment params, must return a full HTML document string.                   | No       | undefined | `(params: GetHtmlInputsFields) => string`      |
+| loaderContainerStyle        | Custom style for the loading indicator's container                   | No       | undefined | ViewStyle      |
+| loaderTextStyle        | Custom style for the loading indicator's text                   | No       | undefined | TextStyle      |
+| modalProps        | Additional props passed through to the underlying Modal (e.g. `animationType`, `transparent`)                   | No       | undefined | `ModalProps`      |
+| webViewProps        | Additional props passed through to the underlying WebView (e.g. `injectedJavaScript`, `originWhitelist`)                   | No       | undefined | `WebViewProps`      |
 
 ## Contributing
 
