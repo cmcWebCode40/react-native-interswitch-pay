@@ -18,9 +18,9 @@ import {
 
 const isTablet = Platform.OS === 'ios' && Platform.isPad;
 
-const IPG_SANDBOX_FORM_URL =
-  'https://newwebpay.interswitchng.com/collections/w/pay';
-// 'https://newwebpay.qa.interswitchng.com/collections/w/pay';
+const CUSTOM_WEB_CHECKOUT_URL =
+  'https://isw-inline-checkout-webview.uat.isw.la';
+const HTML_INLINE_URL = 'https://sandbox.interswitchng.com/collections/w/pay';
 
 // Example of a fully self-hosted checkout page (no dependency on the hosted
 // inline checkout URL): a hidden HTML form matching Interswitch's classic
@@ -36,7 +36,7 @@ const buildCheckoutFormHtml = (params: GetHtmlInputsFields) => `
     <form
       id="ipg-form"
       method="post"
-      action="${IPG_SANDBOX_FORM_URL}"
+      action="${HTML_INLINE_URL}"
       style="display: none;"
     >
       <input name="merchant_code" value="${params.merchantCode}" />
@@ -226,6 +226,7 @@ export default function App() {
               onCompleted={(resp) => {
                 setResponse(resp);
               }}
+              webPayBaseUrl={CUSTOM_WEB_CHECKOUT_URL}
             />
           ) : null}
         </>
