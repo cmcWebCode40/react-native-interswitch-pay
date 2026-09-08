@@ -15,6 +15,7 @@ import type {
 import { BackDrop } from './Backdrop';
 import {
   INLINE_CHECKOUT_URL,
+  isValidHttpUrl,
   SITE_REDIRECT_URL,
   transactionMessages,
 } from './utils';
@@ -42,6 +43,12 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     style: customStyle,
     showBackdrop = false,
     siteRedirectUrl = SITE_REDIRECT_URL,
+    webPayBaseUrl,
+    getHtml,
+    loaderContainerStyle,
+    loaderTextStyle,
+    modalProps,
+    webViewProps,
   },
   ref
 ) => {
@@ -114,6 +121,12 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     throw new Error('Amount must be a valid number');
   }
 
+  if (webPayBaseUrl && !isValidHttpUrl(webPayBaseUrl)) {
+    throw new Error(
+      `Invalid webPayBaseUrl: "${webPayBaseUrl}" is not a valid http(s) URL`
+    );
+  }
+
   const requestParams: Record<string, any> = {
     mode,
     currency,
@@ -181,20 +194,41 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
     );
   }
 
-  const webviewUrl = `${INLINE_CHECKOUT_URL}?${queryParams.toString()}`;
+  const webviewUrl = `${webPayBaseUrl || INLINE_CHECKOUT_URL}?${queryParams.toString()}`;
+
+  const webViewSource = getHtml
+    ? {
+        html: getHtml({
+          customer,
+          tokeniseCard,
+          payItem,
+          trnxRef,
+          merchantCode,
+          amount: parsedAmount,
+          accessToken,
+          currency,
+          mode,
+          splitAccounts,
+          siteRedirectUrl,
+        }),
+      }
+    : { uri: webviewUrl };
 
   return (
-    <Modal visible={openModal}>
+    <Modal visible={openModal} {...modalProps}>
       {initializingWebView && (
-        <View style={style.loaderContainer}>
-          <Text style={style.loaderText}>
+        <View style={[style.loaderContainer, loaderContainerStyle]}>
+          <Text style={[style.loaderText, loaderTextStyle]}>
             {loadingText ?? 'Loading Payment Gateway, Please wait.'}
           </Text>
           <ActivityIndicator color={indicatorColor} />
         </View>
       )}
       <WebView
-        source={{ uri: webviewUrl }}
+        javaScriptEnabled
+        originWhitelist={['*']}
+        {...webViewProps}
+        source={webViewSource}
         ref={webViewRef}
         onMessage={onMessageHandler}
         style={[style.flex, customStyle]}
@@ -206,8 +240,6 @@ const IswPaymentWebView: React.ForwardRefRenderFunction<
         onError={() => {
           setIsLoading(false);
         }}
-        javaScriptEnabled={true}
-        originWhitelist={['*']}
       />
       {showBackdrop && (
         <BackDrop
@@ -233,7 +265,7 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
-    marginTop: '25%',
+    marginTop: '15%',
   },
   loaderText: {
     marginBottom: 10,
