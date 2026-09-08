@@ -5,9 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; 
-        script-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com 'unsafe-inline'; 
-        connect-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com ws://127.0.0.1:5500; 
-        frame-src https://newwebpay.interswitchng.com https://newwebpay.qa.interswitchng.com;
+        script-src https://newwebpay.interswitchng.com https://newwebpay-sandbox.interswitchng.com 'unsafe-inline'; 
+        connect-src https://newwebpay.interswitchng.com https://newwebpay-sandbox.interswitchng.com ws://127.0.0.1:5500; 
+        frame-src https://newwebpay.interswitchng.com https://newwebpay-sandbox.interswitchng.com;
         style-src 'unsafe-inline';" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <title>Interswitch WebPay</title>
@@ -211,7 +211,7 @@
       const scriptUrl =
         mode === "LIVE"
           ? "https://newwebpay.interswitchng.com/inline-checkout.js"
-          : "https://newwebpay.qa.interswitchng.com/inline-checkout.js";
+          : "https://newwebpay-sandbox.interswitchng.com/inline-checkout.js";
 
       function addOptionalParams(paymentRequest) {
         if (params.cust_name) {
