@@ -163,9 +163,32 @@ const styles = StyleSheet.create({
 
 ```
 
-#### Provide your own checkout page (avoid vendor lock-in)
+#### Customizing where the checkout page comes from
 
-By default the WebView loads a hosted Interswitch inline checkout page. If you'd rather not depend on that hosted URL, pass `getHtml` to render your own HTML instead — it receives the resolved payment params and must return a full HTML document string.
+The WebView resolves its `source` in this order, checked top to bottom:
+
+1. **`getHtml` provided** → the WebView loads your returned HTML string directly (`source={{ html }}`). This wins outright and `webPayBaseUrl` is ignored entirely.
+2. **`webPayBaseUrl` provided** (and no `getHtml`) → the WebView loads that URL instead of the hosted checkout page, with the same query params appended.
+3. **Neither provided** → falls back to the library's hosted Interswitch inline checkout page.
+
+`webPayBaseUrl` must be a valid `http(s)` URL — passing anything else (e.g. a malformed string) throws synchronously when the component renders, so validate user-supplied values before passing them in.
+
+##### Option A: point at your own checkout base URL
+
+Use this when you're hosting your own version of the inline checkout page (or a staging/UAT variant) but still want the library to build and append the standard query params for you.
+
+```js
+import { IswPaymentWebView } from 'react-native-interswitch-pay';
+
+<IswPaymentWebView
+  // ...other required props
+  webPayBaseUrl="https://isw-inline-checkout-webview.uat.isw.la"
+/>
+```
+
+##### Option B: provide your own checkout page HTML (avoid vendor lock-in)
+
+Pass `getHtml` to render your own HTML instead of loading any URL at all — it receives the resolved payment params (see `GetHtmlInputsFields`: `customer`, `tokeniseCard`, `payItem`, `trnxRef`, `merchantCode`, `amount`, `accessToken`, `currency`, `mode`, `splitAccounts`, `siteRedirectUrl`) and must return a full HTML document string. Because `getHtml` takes precedence, `webPayBaseUrl` is not read at all when both are set.
 
 ```js
 import {
@@ -185,6 +208,7 @@ const buildCheckoutHtml = (params: GetHtmlInputsFields) => `
       >
         <input name="merchant_code" value="${params.merchantCode}" />
         <input name="pay_item_id" value="${params.payItem.id}" />
+        <input name="site_redirect_url" value="${params.siteRedirectUrl ?? ''}" />
         <input name="txn_ref" value="${params.trnxRef}" />
         <input name="amount" value="${params.amount}" />
         <input name="currency" value="${params.currency}" />
@@ -323,7 +347,11 @@ const styles = StyleSheet.create({
 | showBackdrop        | Display loading backdrop                     | No       | false | boolean     |
 | style        | WebView component custom style                   | No       | object | ViewStyle     |
 | backButton        | custom back button style                   | No       | undefined | React Node      |
-| webPayBaseUrl        | Custom checkout base URL, replacing the default hosted Interswitch checkout page. Must be a valid http(s) URL. | No       | undefined | string      |
+| loadingText        | Custom text shown under the loading indicator while the WebView initializes                   | No       | 'Loading Payment Gateway, Please wait.' | string      |
+| tokeniseCard        | Whether to tokenize the customer's card; the token is returned when you re-query the transaction                   | No       | undefined | `'true' \| 'false'`      |
+| accessToken        | Access token value gotten from passport                   | No       | undefined | `'true' \| 'false'`      |
+| siteRedirectUrl        | URL Interswitch redirects to after checkout completes                   | No       | `'https://blank.org'` | string      |
+| webPayBaseUrl        | Custom checkout base URL, replacing the default hosted Interswitch checkout page. Must be a valid http(s) URL. Ignored when `getHtml` is set. | No       | undefined | string      |
 | getHtml        | Render your own checkout HTML instead of loading `webPayBaseUrl`. Receives the resolved payment params, must return a full HTML document string.                   | No       | undefined | `(params: GetHtmlInputsFields) => string`      |
 | loaderContainerStyle        | Custom style for the loading indicator's container                   | No       | undefined | ViewStyle      |
 | loaderTextStyle        | Custom style for the loading indicator's text                   | No       | undefined | TextStyle      |
